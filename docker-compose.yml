@@ -3,7 +3,7 @@ version: "3"
 services:
   sinthorn:
     container_name: sinthorn
-    image: sinthorn:latest
+    image: panotza/sinthorn:latest
     environment:
       CHANNEL_ACCESS_TOKEN: ''
       CHANNEL_SECRET: ''
