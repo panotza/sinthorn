@@ -69,9 +69,6 @@ async function setupDb () {
 					resolve(numReplaced)
 				})
 			})
-		},
-		close: function () {
-			console.log('close db connection')
 		}
 	}
 }
@@ -148,7 +145,6 @@ async function collectTopics (db) {
 }
 
 async function notify (db) {
-
 	const list = await db.listNotify()
 	if (list.length > 0) {
 		console.log('notify')
@@ -172,12 +168,11 @@ async function run () {
 		const db = await setupDb()
 		await collectTopics(db)
 		await notify(db)
-		await db.close()
 	} catch (err) {
 		console.error(err)
 	}
 
-	setTimeout(() => { run() }, 30000)
+	setTimeout(() => { run() }, +process.env.INTERVAL || 30000)
 }
 
 module.exports = run
