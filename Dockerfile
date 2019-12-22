@@ -1,4 +1,4 @@
-FROM node:12.14.0-alpine
+FROM arm32v7/node:12.14.0-alpine
 WORKDIR /usr/src/app
 RUN mkdir db
 
