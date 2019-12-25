@@ -86,60 +86,65 @@ async function collectTopics (db) {
 	await page.goto(url, { waitUntil: 'networkidle2' })
 	await page.waitForSelector('#pt-topic-left')
 
-	const data = await page.evaluate(async () => {
-		function extractThumbnail (s) {
-			const r = s.match(/https:\/\/.+\.(png|jpg|gif)/)
-			if (!r) {
-				return null
-			}
-			return r[0]
-		}
-
-		function sleep (ms) {
-			return new Promise((resolve) => {
-				setTimeout(() => {
-					resolve()
-				}, ms)
-			})
-		}
-
-		document.documentElement.style['scrollBehavior'] = 'auto' // disable page animation
-		const container = document.querySelector('#pt-topic-left')
-		const data = []
-		const list = container.querySelectorAll('li')
-
-		for (let i = 0; i < 10; i++) {
-			const e = list[i]
-			if (e.classList.contains('pt-list-item__no-img')) {
-				data.push({ 
-					url: e.children[0].children[0].children[0].href,
-					title: e.children[0].children[0].children[0].innerText,
-					thumbnail: null,
-					created_by: e.children[2].children[1].innerText					
-				})
-			} else {
-				e.scrollIntoView()
-				let thumbnail;
-				while (!thumbnail) {
-					await sleep(100) // wait for scroll animation
-					thumbnail = e.getElementsByClassName('pt-list-item__img img-thumbnail').item(0)
+	try {
+		const data = await page.evaluate(async () => {
+			function extractThumbnail (s) {
+				const r = s.match(/https:\/\/.+\.(png|jpg|gif)/)
+				if (!r) {
+					return null
 				}
+				return r[0]
+			}
 
-				data.push({ 
-					url: e.children[0].children[0].children[0].href,
-					title: e.children[0].children[0].children[0].innerText,
-					thumbnail: extractThumbnail(thumbnail.attributes.getNamedItem('style').nodeValue) || null,
-					created_by: e.children[2].children[1].innerText
+			function sleep (ms) {
+				return new Promise((resolve) => {
+					setTimeout(() => {
+						resolve()
+					}, ms)
 				})
 			}
-		}
 
-		return data
-	})
-	for (dat of data.reverse()) {
-		await db.saveTopics(dat)
-		await util.sleep(1) // for timestamp order precision
+			document.documentElement.style['scrollBehavior'] = 'auto' // disable page animation
+			const container = document.querySelector('#pt-topic-left')
+			const data = []
+			const list = container.querySelectorAll('li')
+
+			for (let i = 0; i < 10; i++) {
+				const e = list[i]
+				if (e.classList.contains('pt-list-item__no-img')) {
+					data.push({ 
+						url: e.children[0].children[0].children[0].href,
+						title: e.children[0].children[0].children[0].innerText,
+						thumbnail: null,
+						created_by: e.children[2].children[1].innerText					
+					})
+				} else {
+					e.scrollIntoView()
+					let thumbnail;
+					while (!thumbnail) {
+						await sleep(100) // wait for scroll animation
+						thumbnail = e.getElementsByClassName('pt-list-item__img img-thumbnail').item(0)
+					}
+
+					data.push({ 
+						url: e.children[0].children[0].children[0].href,
+						title: e.children[0].children[0].children[0].innerText,
+						thumbnail: extractThumbnail(thumbnail.attributes.getNamedItem('style').nodeValue) || null,
+						created_by: e.children[2].children[1].innerText
+					})
+				}
+			}
+
+			return data
+		})
+		for (dat of data.reverse()) {
+			await db.saveTopics(dat)
+			await util.sleep(1) // for timestamp order precision
+		}
+	} catch (err) {
+		console.error(err)
 	}
+
 	await page.close()
 	await browser.close()
 }
