@@ -5,18 +5,14 @@ RUN mkdir db
 ENV CHROME_BIN="/usr/bin/chromium-browser" \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
 
-RUN set -x \
-    && apk update \
-    && apk upgrade \
-    && apk add --no-cache \
-    udev \
-    ttf-freefont \
+RUN apk add --no-cache \
     chromium \
-      \
-      # Cleanup
-      && apk del --no-cache make gcc g++ python binutils-gold gnupg libstdc++ \
-      && rm -rf /usr/include \
-      && rm -rf /var/cache/apk/* /root/.node-gyp /usr/share/man /tmp/*
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
 
 ENV NODE_ENV="production"
 ENV DB_PATH=db/sinthorn.db

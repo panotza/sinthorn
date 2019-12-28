@@ -80,7 +80,7 @@ async function collectTopics (db) {
 	const browser = await require('puppeteer-core').launch({
 		headless: true,
 		executablePath: process.env.CHROME_BIN || null,
-		args: ['--no-sandbox', '--headless', '--disable-gpu']
+		args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage']
 	})
 	const page = await browser.newPage()
 	await page.goto(url, { waitUntil: 'networkidle2' })
