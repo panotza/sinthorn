@@ -1,13 +1,12 @@
 require('console-stamp')(console, {})
 require('dotenv').config()
 
-const util = require('./util')
+const { sleep } = require('./util')
 const line = require('./line')
 
 const Datastore = require('nedb')
 
 async function setupDb () {
-	console.log('setup db connection')
 	const db = new Datastore({ filename: process.env.DB_PATH, autoload: true });
 
 	return {
@@ -80,7 +79,7 @@ async function collectTopics (db) {
 	const browser = await require('puppeteer-core').launch({
 		headless: true,
 		executablePath: process.env.CHROME_BIN || null,
-		args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage']
+		args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
 	})
 	const page = await browser.newPage()
 	await page.goto(url, { waitUntil: 'networkidle2' })
@@ -139,7 +138,7 @@ async function collectTopics (db) {
 		})
 		for (dat of data.reverse()) {
 			await db.saveTopics(dat)
-			await util.sleep(1) // for timestamp order precision
+			await sleep(1) // for timestamp order precision
 		}
 	} catch (err) {
 		console.error(err)
@@ -164,7 +163,7 @@ async function notify (db) {
 			thumbnail: it.thumbnail
 		})
 		await db.setNotified(it)
-		util.sleep(1000)
+		await sleep(1000)
 	}
 }
 
@@ -176,8 +175,6 @@ async function run () {
 	} catch (err) {
 		console.error(err)
 	}
-
-	setTimeout(() => { run() }, +process.env.INTERVAL || 30000)
 }
 
 module.exports = run
