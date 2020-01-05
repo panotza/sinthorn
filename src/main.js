@@ -74,18 +74,19 @@ async function setupDb () {
 
 async function collectTopics (db) {
 	console.log('collect topics')
-
-	const url = 'https://pantip.com/tag/%E0%B8%AB%E0%B8%B8%E0%B9%89%E0%B8%99'
-	const browser = await require('puppeteer-core').launch({
-		headless: true,
-		executablePath: process.env.CHROME_BIN || null,
-		args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
-	})
-	const page = await browser.newPage()
-	await page.goto(url, { waitUntil: 'networkidle2' })
-	await page.waitForSelector('#pt-topic-left')
+	let browser, page
 
 	try {
+		const url = 'https://pantip.com/tag/%E0%B8%AB%E0%B8%B8%E0%B9%89%E0%B8%99'
+		browser = await require('puppeteer-core').launch({
+			headless: true,
+			executablePath: process.env.CHROME_BIN || null,
+			args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage']
+		})
+		page = await browser.newPage()
+		await page.goto(url, { waitUntil: 'networkidle2' })
+		await page.waitForSelector('#pt-topic-left')
+	
 		const data = await page.evaluate(async () => {
 			function extractThumbnail (s) {
 				const r = s.match(/https:\/\/.+\.(png|jpg|gif)/)
@@ -142,10 +143,15 @@ async function collectTopics (db) {
 		}
 	} catch (err) {
 		console.error(err)
-	}
+	} finally {
+		if (page) {
+			await page.close()
+		}
 
-	await page.close()
-	await browser.close()
+		if (browser) {
+			await browser.close()
+		}
+	}
 }
 
 async function notify (db) {
